@@ -17,7 +17,7 @@
     (map (comp zero-pad pad stringify) (conj rest byte))))
 
 (defn three-bytes-to-four-bytes
-  "turn three bytes into four, as part of base64 encoding"
+  "Turn three bytes into four (padded with zeros). Used for base64 encoding"
   [bytes-in]
   (let [[b1 b2 b3] bytes-in
         c1 (bit-shift-right b1 2)                         ; first 6 bits of b1
@@ -39,7 +39,9 @@
    48 \w 49 \x 50 \y 51 \z 52 \0 53 \1 54 \2 55 \3
    56 \4 57 \5 58 \6 59 \7 60 \8 61 \9 62 \+ 63 \- })
 
-(defn hex-to-base64 "Base64 encode a hex string"
+;; TODO: change tail call to `(apply str (comp encode flatten expand to-triples))`?
+(defn hex-to-base64
+  "Base64 encode a hex string"
   [hex]
   (let [bytes     (hex-to-bytes hex)
         triples   (partition 3 bytes)
@@ -61,13 +63,6 @@
 ;; TODO:
 
 ;; 1. Base64 algorithm:
-;;   a. handle input that isn't a multiple of three (padding)
-;;   b. unit test that above is lazy (encode infinite hex, take first 10)
-;; 2. Swap 'unsafe' hex-to-bytes for a safer hex lookup (dict?)
-
-
-;; Step 2: encode the byte array in Base64
-
-;; (defn hex-to-base64
-;;   "Challenge 1: Convert hex to base64"
-;;   [hex] (let [bytes (hex-to-bytes hex)]) bytes)
+;;   a. Handle input that isn't a multiple of three (padding)
+;;   b. Unit test that above is lazy (encode infinite hex, take first 10)
+;;   c. Swap 'unsafe' hex-to-bytes for a safer hex lookup (dict?)
