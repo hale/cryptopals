@@ -9,8 +9,25 @@
          (map byte [2r1001101 2r1100001 2r1101110]))))
 
 (deftest print-bytes
-  (is (= (s/print-bytes (s/hex-to-bytes "4d616e"))
-         ["1001101" "1100001" "1101110"])))
+  (is (= (apply s/print-bytes (s/hex-to-bytes "4d616e"))
+         ["01001101" "01100001" "01101110"])))
 
-;; (deftest hex-to-base64
-;;     (is (= "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t" (s/hex-to-base64 "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"))))
+(deftest three-bytes-to-four-bytes
+  (is (= (s/three-bytes-to-four-bytes (map byte [77 97 110]))
+         (map byte [19 22 5 46]))))
+
+(deftest hex-to-base64
+  (is (= "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
+         (s/hex-to-base64 "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"))))
+
+;; SCRATCH
+
+;; (deftest encode-bits "Encodes a seq of six bits" [bits])
+
+;; My first idea was to iterate through each six-bit pattern, passing the remainder into the loop and processing each byte + remainder in batched of six. However, it's not possible to grab six bits from a byte in Java; a byte is the smallest possible value.
+;;
+;; New idea must therefore use bitwise operators.
+;;
+;; So to encode M (01001101) we must take the first 6 bits, and keep the remaining 2 for later...
+
+
