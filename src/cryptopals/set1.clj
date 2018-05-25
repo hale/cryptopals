@@ -48,6 +48,14 @@
         encoded   (map base16-map flattened)]
     (apply str encoded)))
 
+(defn xor-combine
+  "Given two hex strings encoding equal-length buffers, produce their XOR combination"
+  [h1 h2]
+  (let [b1    (hex-to-bytes h1)
+        b2    (hex-to-bytes h2)
+        xored (map bit-xor b1 b2)
+        hexes (map (partial format "%x") xored)]
+    (apply str hexes)))
 
 
 ;; TODO:
