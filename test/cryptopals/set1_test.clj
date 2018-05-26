@@ -16,14 +16,27 @@
   (is (= (s/three-bytes-to-four-bytes (map byte [77 97 110]))
          (map byte [19 22 5 46]))))
 
+;; Set 1 :: Challenge 1 :: Base64 encode a hex string
 (deftest hex-to-base64
   (is (= "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
          (s/hex-to-base64 "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"))))
 
+;; Set 1 :: Challenge 2 :: Fixed XOR
 (deftest xor-combine
   (is (= (s/xor-combine "1c0111001f010100061a024b53535009181c"
                         "686974207468652062756c6c277320657965")
          "746865206b696420646f6e277420706c6179")))
+
+;; Set 1 :: Challenge 3 :: Single-byte XOR cipher
+(deftest decode-single-char-xor-encoded-hex-str
+  (let [hex-str "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
+        result  (s/decode-single-char-xor-encoded-hex-str hex-str)]
+    (is (= (:out result) "Cooking MC's like a pound of bacon")
+        (= (:char result) \x))))
+
+
+
+
 
 ;; SCRATCH
 

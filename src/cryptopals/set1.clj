@@ -1,6 +1,9 @@
-(ns cryptopals.set1)
+(ns cryptopals.set1
+  "RULE: Always operate on raw bytes, never on encoded strings. Only use hex and base64 for pretty-printing.")
 
-;; RULE: Always operate on raw bytes, never on encoded strings. Only use hex and base64 for pretty-printing.
+;; ===============
+;;   CHALLENGE 1
+;; ===============
 
 (defn hex-to-bytes
   "UNSAFE -- interprets string as hex using read-string"
@@ -29,7 +32,7 @@
         ]
     [c1 c2 c3 c4]))
 
-(def base16-map
+(def base64-map
   { 0 \A  1 \B  2 \C  3 \D  4 \E  5 \F  6 \G  7 \H
     8 \I  9 \J 10 \K 11 \L 12 \M 13 \N 14 \O 15 \P
    16 \Q 17 \R 18 \S 19 \T 20 \U 21 \V 22 \W 23 \X
@@ -41,17 +44,21 @@
 
 ;; TODO: change tail call to `(apply str (comp encode flatten expand to-triples))`?
 (defn hex-to-base64
-  "Base64 encode a hex string"
+  "Set 1 :: Challenge 1 :: Base64 encode a hex string"
   [hex]
   (let [bytes     (hex-to-bytes hex)
         triples   (partition 3 bytes)
         expanded  (map three-bytes-to-four-bytes triples)
         flattened (flatten expanded)
-        encoded   (map base16-map flattened)]
+        encoded   (map base64-map flattened)]
     (apply str encoded)))
 
+;; ===============
+;;   CHALLENGE 2
+;; ===============
+
 (defn xor-combine
-  "Given two hex strings encoding equal-length buffers, produce their XOR combination"
+  "Set 1 :: Challenge 2 :: Fixed XOR"
   [h1 h2]
   (let [b1    (hex-to-bytes h1)
         b2    (hex-to-bytes h2)
@@ -59,6 +66,63 @@
         hexes (map (partial format "%x") xored)]
     (apply str hexes)))
 
+;; ===============
+;;   CHALLENGE 3
+;; ===============
+
+(defn hex-to-str
+  "Also known as 'unhexify'"
+  [hex]
+  (let [bytes (hex-to-bytes hex)
+        chars (map char bytes)]
+    (apply str chars)))
+
+(defn bytes-to-str
+  [bytes]
+  (let [chars (map char bytes)]
+    (apply str chars)))
+
+(defn single-char-xor
+  "XORs a hex against the given char"
+  [hex char]
+  (let [b1    (hex-to-bytes hex)
+        b2    (map byte (repeat char))
+        xored (map bit-xor b1 b2)]
+    (bytes-to-str xored)))
+
+(defn str-englishness-old
+  "DEPRECATED: Measures 'englishness' of a string by the absence of 'weird' chars"
+  [str]
+  (let [eng-chars       (vals base64-map)
+        str-chars       (seq (char-array str))
+        non-eng-chars   (clojure.set/difference (set eng-chars) (set str-chars))
+        p-non-eng-chars (/ (count non-eng-chars) (count (eng-chars)))]
+    (- 1 p-non-eng-chars)))
+
+(defn str-englishness
+  "Measures 'englishness' of a string by propotion of word chars"
+  [str]
+  (let [eng-chars (count (re-seq #"[\w ]" str))]
+    (/ eng-chars (count str))))
+
+(defn decode [str char]
+  (let [xored (single-char-xor str char)]
+    {:in str
+     :out xored
+     :char char
+     :score (str-englishness xored)}))
+
+(defn get-candidates [chars str]
+  (map (partial decode str) chars))
+
+(defn decode-single-char-xor-encoded-hex-str
+  "Set 1 :: Challenge 3 :: Single-byte XOR cipher"
+  [str]
+  (let [chars      (vals base64-map)
+        candidates (map (partial decode str) chars)
+        sorted     (sort-by :score candidates)
+        winner     (last sorted)]
+    winner))
 
 ;; TODO:
 
