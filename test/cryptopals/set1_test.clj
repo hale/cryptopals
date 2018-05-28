@@ -1,5 +1,6 @@
 (ns cryptopals.set1-test
   (:require [clojure.test :refer :all]
+            [clojure.string :as string]
             [cryptopals.set1 :as s]))
 
 (deftest hex-to-bytes
@@ -31,12 +32,39 @@
 (deftest decode-single-char-xor-encoded-hex-str
   (let [hex-str "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
         result  (s/decode-single-char-xor-encoded-hex-str hex-str)]
-    (is (= (:out result) "Cooking MC's like a pound of bacon")
-        (= (:char result) \x))))
+    (is (= (:out result) "Cooking MC's like a pound of bacon"))
+    (is (= (:char result) \X))))
 
+;; Set 1 :: Challenge 4 :: Detect single-character XOR
+(deftest detect-single-char-xor
+  (let [strings (string/split (slurp "data/s1c4.txt") #"\s")
+        result  (s/detect-single-char-xor strings)]
+    (is (= (:in result) "7b5a4215415d544115415d5015455447414c155c46155f4058455c5b523f"))
+    (is (= (:out result) "Now that the party is jumping\n"))
+    (is (= (:char result) \5))))
 
+;; Set 1 :: Challenge 5 :: Implement repeating-key XOR
+(deftest repeating-key-xor
+  (let [input "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal"
+        key   "ICE"
+        result (s/repeating-key-xor key input)]
+    (is (= result
+           "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"))))
 
+(deftest repeating-key-xor
+    (is (= (s/edit-distance "this is a test" "wokka wokka!!!") 37)))
 
+(deftest base64-to-bytes
+  (is (= "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
+         (s/bytes-to-hex (s/base64-to-bytes "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")))))
+
+(deftest three-bytes-to-four-bytes
+  (is (= [2r00010011 2r00010110 2r00000101 2r00101110] [19 22 5 46]
+         (s/three-bytes-to-four-bytes [2r01001101 2r01100001 2r01101110]))))
+
+(deftest four-bytes-to-three-bytes
+  (is (= [2r01001101 2r01100001 2r01101110])
+      (s/four-bytes-to-three-bytes [2r00010011 2r00010110 2r00000101 2r00101110])))
 
 ;; SCRATCH
 
