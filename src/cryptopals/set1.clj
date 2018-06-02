@@ -1,6 +1,8 @@
 (ns cryptopals.set1
   (:require [clojure.set :refer [difference map-invert]]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.math.numeric-tower :refer [expt]]
+            [clojure.string :as str]))
 
 ;; "RULE: Always operate on raw bytes, never on encoded strings. Only use hex and base64 for pretty-printing
 
@@ -62,7 +64,7 @@
    32 \g 33 \h 34 \i 35 \j 36 \k 37 \l 38 \m 39 \n
    40 \o 41 \p 42 \q 43 \r 44 \s 45 \t 46 \u 47 \v
    48 \w 49 \x 50 \y 51 \z 52 \0 53 \1 54 \2 55 \3
-   56 \4 57 \5 58 \6 59 \7 60 \8 61 \9 62 \+ 63 \- })
+   56 \4 57 \5 58 \6 59 \7 60 \8 61 \9 62 \+ 63 \/ })
 
 (def base64-chars (set (vals base64-map)))
 
@@ -111,14 +113,7 @@
         chars (map char bytes)]
     (apply str chars)))
 
-(defn bytes-to-str
-  [bytes]
-  (let [to-char (fn [b] (try (char b)
-                         (catch IllegalArgumentException e
-                           (println (str "Error decoding " (print-bytes b)))
-                           "?")))
-        chars (map to-char bytes)]
-    (apply str chars)))
+(defn bytes-to-str [bytes] (apply str (map char bytes)))
 
 (defn str-englishness-old
   "DEPRECATED: Measures 'englishness' of a string by the absence of 'weird' chars"
@@ -132,8 +127,74 @@
 (defn str-englishness
   "Measures 'englishness' of a string by propotion of word chars"
   [str]
-  (let [eng-chars (count (re-seq #"[a-zA-A ]" str))]
+  (let [eng-chars (count (re-seq #"[a-zA-Z ]" str))]
     (/ eng-chars (count str))))
+
+(def ice-text
+  (let [contents  (file-seq (clojure.java.io/file "./data/vi-lyrics"))
+        filenames (filter #(.isFile %) contents)]
+    (string/join (map slurp filenames))))
+
+(def ice-char-rel-freq
+  (let [sanitized (string/lower-case ice-text)
+        chars     (map #(char (first %)) (re-seq #"[a-z ']" sanitized))
+        freqs     (frequencies chars)
+        rel-freqs (map-vals (fn [v] (/ v (count chars))) freqs)]
+    rel-freqs))
+
+(def ice-char-rel-freq-hardcoded-dec
+  "For the sake of comparison"
+  { {\a 0.06212 \b 0.01350 \c 0.02465 \d 0.02556
+     \e 0.08375 \f 0.01177 \g 0.01883 \h 0.03980
+     \i 0.06460 \j 0.00380 \k 0.01630 \l 0.03510
+     \m 0.02448 \n 0.05429 \o 0.07037 \p 0.01495
+     \q 0.00032 \r 0.03612 \s 0.04152 \t 0.07494
+     \u 0.02708 \v 0.00732 \w 0.01795 \x 0.00162
+     \y 0.02644 \z 0.00150 \' 0.01737 \space 0.18394}
+
+(def eng-char-rel-freq
+  { \a 0.08167 \b 0.01492 \c 0.02782 \d 0.04253
+    \e 0.12702 \f 0.02228 \g 0.02015 \h 0.06094
+    \i 0.06966 \j 0.00153 \k 0.00772 \l 0.04025
+    \m 0.02406 \n 0.06749 \o 0.07507 \p 0.01929
+    \q 0.00095 \r 0.05987 \s 0.06327 \t 0.09056
+    \u 0.02758 \v 0.00978 \w 0.02360 \x 0.00150
+    \y 0.01974 \z 0.00074 })
+
+k
+
+(defn str-englishness-chi-squared
+  "TODO: make a str-englishness that checks for letter frequency as well as presence"
+  [str]
+  (let [chars (char-array str)  ; [\h \e \l \l \o]
+        freqs (frequencies chars) ; {\l 2 \h 1 \e 1 \o 1}
+        expected-freqs (map-vals (partial * (count chars)) ice-char-rel-freq) ; {\a }
+        ]))
+
+(defn- square [x] (expt x 2))
+
+(defn chi-square
+  [actual expected]
+  (/ (square (- actual expected)) expected))
+
+(defn chi-squared [] (/expected))
+
+(defn map-vals [f m]
+  (into {} (for [[k v] m] [k (f v)])))
+
+(def letter-freq (char-array " oetaoinshrdlcumwfgypbvkjxqz"))
+
+(defn str-englishness
+  "Measures 'englishness' of sring by comparing with known relative char frequency"
+  [str]
+  (let [chars   (char-array str)
+        freq    (frequencies chars)
+        ordered (keys (sort-by val > freq))]
+    (edit-distance-bytes chars letter-freq]))
+  )
+;; remove chars not in letter-freq
+;; order chars by frequency of occurrence
+;; (edit-distance-bytes )
 
 
 (defn single-char-xor
@@ -245,7 +306,6 @@
     (apply min-key :score scores)))
 
 
-(determine-key-size (str-to-bytes input) 40)
 
 ;; STEP 2 -- transpose input using the discovered key size
 
@@ -253,26 +313,30 @@
 
 ;; STEP 3 -- solve each block as if it was single-char XOR
 
-
-(def input (slurp "data/s1c6.txt"))
-(def decoded (base64-to-bytes input))
-(def keysize (:ks (determine-key-size decoded 500)))
-(def blocks (transpose (partition keysize decoded)))
-
-;; (def transposed (decrypt-vigenere decoded))
-(def decrypted (map (partial decode-single-char-xor) blocks))
-;; (map :score decoded)
-
-(def output (map bytes-to-str (map :out decrypted)))
+(defn find-repeating-xor-key
+  "Given Base64 encoded data encrypted with repeating-key XOR, find the key"
+  [encoded]
+  (let [decoded   (base64-to-bytes encoded)
+        keysize   (:ks (determine-key-size decoded 50))
+        _ (println (str "best guess key size is " keysize))
+        blocks    (transpose (partition keysize decoded))
+        decrypted (map (partial decode-single-char-xor) blocks)]
+    (apply str (map :char decrypted))))
 
 
+(defn decrypt-repeating-key-xor
+  "Decodes input bytestream using the given key"
+  [key bs1]
+  (let [bs2   (flatten (repeat (map byte (char-array key))))
+        xored (map bit-xor bs1 bs2)]
+    (bytes-to-str xored)))
 
-
+(def base64-to-str (comp bytes-to-str base64-to-bytes))
 
 ;; TODO:
 
 ;; 1. Base64 algorithm:
 ;;   a. Handle input that isn't a multiple of three (padding)
-;;   b. Unit test that above is lazy (encode infinite hex, take first 10)
 ;;   c. Swap 'unsafe' hex-to-bytes for a safer hex lookup (dict?)
 ;; 2. Roll your own bitCount function
+;; 3. Make everything lazy

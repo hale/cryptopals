@@ -58,6 +58,10 @@
   (is (= "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
          (s/bytes-to-hex (s/base64-to-bytes "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")))))
 
+(deftest base64-to-str
+  (is (= "Man is distinguished, not only by his reason, but by this singular passion from other animals, which is a lust of the mind, that by a perseverance of delight in the continued and indefatigable generation of knowledge, exceeds the short vehemence of any carnal pleasure.")
+      (s/base64-to-str "TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlzIHNpbmd1bGFyIHBhc3Npb24gZnJvbSBvdGhlciBhbmltYWxzLCB3aGljaCBpcyBhIGx1c3Qgb2YgdGhlIG1pbmQsIHRoYXQgYnkgYSBwZXJzZXZlcmFuY2Ugb2YgZGVsaWdodCBpbiB0aGUgY29udGludWVkIGFuZCBpbmRlZmF0aWdhYmxlIGdlbmVyYXRpb24gb2Yga25vd2xlZGdlLCBleGNlZWRzIHRoZSBzaG9ydCB2ZWhlbWVuY2Ugb2YgYW55IGNhcm5hbCBwbGVhc3VyZS4=")))
+
 (deftest three-bytes-to-four-bytes
   (is (= [2r00010011 2r00010110 2r00000101 2r00101110] [19 22 5 46]
          (s/three-bytes-to-four-bytes [2r01001101 2r01100001 2r01101110]))))
@@ -66,14 +70,10 @@
   (is (= [2r01001101 2r01100001 2r01101110])
       (s/four-bytes-to-three-bytes [2r00010011 2r00010110 2r00000101 2r00101110])))
 
+(deftest find-repeating-xor-key
+  (is (= "Terminator X: Bring the noise"
+         (s/find-repeating-xor-key (slurp "data/s1c6.txt")))))
+
 ;; SCRATCH
 
-;; (deftest encode-bits "Encodes a seq of six bits" [bits])
-
 ;; My first idea was to iterate through each six-bit pattern, passing the remainder into the loop and processing each byte + remainder in batched of six. However, it's not possible to grab six bits from a byte in Java; a byte is the smallest possible value.
-;;
-;; New idea must therefore use bitwise operators.
-;;
-;; So to encode M (01001101) we must take the first 6 bits, and keep the remaining 2 for later...
-
-
