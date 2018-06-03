@@ -1,8 +1,7 @@
 (ns cryptopals.set1
   (:require [clojure.set :refer [difference map-invert]]
             [clojure.string :as string]
-            [clojure.math.numeric-tower :refer [expt]]
-            [clojure.string :as str]))
+            [clojure.math.numeric-tower :refer [expt]]))
 
 ;; "RULE: Always operate on raw bytes, never on encoded strings. Only use hex and base64 for pretty-printing
 
@@ -115,8 +114,8 @@
 
 (defn bytes-to-str [bytes] (apply str (map char bytes)))
 
-(defn str-englishness-old
-  "DEPRECATED: Measures 'englishness' of a string by the absence of 'weird' chars"
+(defn str-englishness-weird
+  "V1 -- Measures 'englishness' of a string by the absence of 'weird' chars"
   [str]
   (let [eng-chars       (vals base64-map)
         str-chars       (seq (char-array str))
@@ -124,11 +123,14 @@
         p-non-eng-chars (/ (count non-eng-chars) (count (eng-chars)))]
     (- 1 p-non-eng-chars)))
 
-(defn str-englishness
-  "Measures 'englishness' of a string by propotion of word chars"
+(defn str-englishness-regex
+  "V2 -- Measures 'englishness' of a string by propotion of word chars"
   [str]
   (let [eng-chars (count (re-seq #"[a-zA-Z ]" str))]
     (/ eng-chars (count str))))
+
+(defn map-vals [f m]
+  (into {} (for [[k v] m] [k (f v)])))
 
 (def ice-text
   (let [contents  (file-seq (clojure.java.io/file "./data/vi-lyrics"))
@@ -143,14 +145,13 @@
     rel-freqs))
 
 (def ice-char-rel-freq-hardcoded-dec
-  "For the sake of comparison"
-  { {\a 0.06212 \b 0.01350 \c 0.02465 \d 0.02556
-     \e 0.08375 \f 0.01177 \g 0.01883 \h 0.03980
-     \i 0.06460 \j 0.00380 \k 0.01630 \l 0.03510
-     \m 0.02448 \n 0.05429 \o 0.07037 \p 0.01495
-     \q 0.00032 \r 0.03612 \s 0.04152 \t 0.07494
-     \u 0.02708 \v 0.00732 \w 0.01795 \x 0.00162
-     \y 0.02644 \z 0.00150 \' 0.01737 \space 0.18394}
+  { \a 0.06212 \b 0.01350 \c 0.02465 \d 0.02556
+    \e 0.08375 \f 0.01177 \g 0.01883 \h 0.03980
+    \i 0.06460 \j 0.00380 \k 0.01630 \l 0.03510
+    \m 0.02448 \n 0.05429 \o 0.07037 \p 0.01495
+    \q 0.00032 \r 0.03612 \s 0.04152 \t 0.07494
+    \u 0.02708 \v 0.00732 \w 0.01795 \x 0.00162
+    \y 0.02644 \z 0.00150 \' 0.01737 \space 0.18394 })
 
 (def eng-char-rel-freq
   { \a 0.08167 \b 0.01492 \c 0.02782 \d 0.04253
@@ -161,40 +162,31 @@
     \u 0.02758 \v 0.00978 \w 0.02360 \x 0.00150
     \y 0.01974 \z 0.00074 })
 
-k
+(defn square [x] (expt x 2))
 
-(defn str-englishness-chi-squared
-  "TODO: make a str-englishness that checks for letter frequency as well as presence"
-  [str]
-  (let [chars (char-array str)  ; [\h \e \l \l \o]
-        freqs (frequencies chars) ; {\l 2 \h 1 \e 1 \o 1}
-        expected-freqs (map-vals (partial * (count chars)) ice-char-rel-freq) ; {\a }
-        ]))
-
-(defn- square [x] (expt x 2))
-
-(defn chi-square
-  [actual expected]
+(defn chi-square [expected actual]
   (/ (square (- actual expected)) expected))
 
-(defn chi-squared [] (/expected))
+;; I think this is the wrong way around. What if instead of considering only the expected values, you also considered the actual values
 
-(defn map-vals [f m]
-  (into {} (for [[k v] m] [k (f v)])))
+;; For each actual value, 
+(defn chi-square-distance
+  "Reduces the difference between two sets of observations to a single number.
+  Lower numbers indicate greater convergence."
+  [expected-freqs actual-freqs]
+  (let [distances (map (fn [[a-key a-val]] (chi-square (get expected-freqs a-key 0.000001) a-val)) actual-freqs)]
+    (reduce + distances)))
 
-(def letter-freq (char-array " oetaoinshrdlcumwfgypbvkjxqz"))
 
-(defn str-englishness
-  "Measures 'englishness' of sring by comparing with known relative char frequency"
+(defn str-iciness
+  "V3 -- Measures the likelyhood of a string being a Vanilla Ice lyric, using a
+  chi-squared test against a relative character frequency map trained on
+  lyrics."
   [str]
-  (let [chars   (char-array str)
-        freq    (frequencies chars)
-        ordered (keys (sort-by val > freq))]
-    (edit-distance-bytes chars letter-freq]))
-  )
-;; remove chars not in letter-freq
-;; order chars by frequency of occurrence
-;; (edit-distance-bytes )
+  (let [chars (char-array (string/lower-case str))  ; [\h \e \l \l \o]
+        freqs (frequencies chars) ; {\l 2 \h 1 \e 1 \o 1}
+        expected-freqs (map-vals (partial * (count chars)) ice-char-rel-freq)]
+    (* -1 (chi-square-distance expected-freqs freqs))))
 
 
 (defn single-char-xor
@@ -209,11 +201,16 @@ k
     {:in bytestream
      :out xored
      :char char
-     :score (str-englishness (bytes-to-str xored))}))
+     :score (str-iciness (bytes-to-str xored))}))
+
+
+(def printable-ascii-chars
+  "https://en.wikipedia.org/wiki/ASCII#Printable_characters"
+  (map char (range 32 127)))
 
 (defn decode-single-char-xor
   [bytestream]
-  (let [candidates (map (partial decode bytestream) base64-chars)
+  (let [candidates (map (partial decode bytestream) printable-ascii-chars)
         sorted     (sort-by :score candidates)
         winner     (last sorted)]
     winner))
@@ -314,22 +311,23 @@ k
 ;; STEP 3 -- solve each block as if it was single-char XOR
 
 (defn find-repeating-xor-key
-  "Given Base64 encoded data encrypted with repeating-key XOR, find the key"
-  [encoded]
-  (let [decoded   (base64-to-bytes encoded)
-        keysize   (:ks (determine-key-size decoded 50))
-        _ (println (str "best guess key size is " keysize))
-        blocks    (transpose (partition keysize decoded))
+  "Given bytes encrypted with repeating-key XOR, find the key"
+  [bs]
+  (let [keysize   (:ks (determine-key-size bs 50))
+        ;; _ (println (str "best guess key size is " keysize " (tried up to 50)"))
+        blocks    (transpose (partition keysize bs))
         decrypted (map (partial decode-single-char-xor) blocks)]
     (apply str (map :char decrypted))))
 
-
 (defn decrypt-repeating-key-xor
-  "Decodes input bytestream using the given key"
-  [key bs1]
-  (let [bs2   (flatten (repeat (map byte (char-array key))))
+  "Decodes input bytestream by guessing the key."
+  [bs1]
+  (let [key (find-repeating-xor-key bs1)
+        bs2   (flatten (repeat (map byte (char-array key))))
         xored (map bit-xor bs1 bs2)]
     (bytes-to-str xored)))
+
+(def decrypt-repeating-key-xor-base64 (comp decrypt-repeating-key-xor base64-to-bytes))
 
 (def base64-to-str (comp bytes-to-str base64-to-bytes))
 
