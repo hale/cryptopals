@@ -1,7 +1,8 @@
 (ns cryptopals.set1
   (:require [clojure.set :refer [difference map-invert]]
             [clojure.string :as string]
-            [clojure.math.numeric-tower :refer [expt]]))
+            [clojure.math.numeric-tower :refer [expt]])
+  (:import [javax.crypto Cipher]))
 
 ;; "RULE: Always operate on raw bytes, never on encoded strings. Only use hex and base64 for pretty-printing
 
@@ -232,7 +233,10 @@
 ;;
 
 (defn detect-single-char-xor
-  "From a seq of hex strings, finds and decodes the one which has been encrypted by single-character XOR"
+  "Set 1 :: Challenge 4 :: Detect single-character XOR
+
+  From a seq of hex strings, finds and decodes the one which has been encrypted
+  by single-character XOR"
   [strings]
   (last (sort-by :score (map decode-single-char-xor-encoded-hex-str strings))))
 
@@ -253,7 +257,9 @@
   (apply str (map (partial format "%02x") bytes)))
 
 (defn repeating-key-xor
-  "Encodes input string using the given key"
+  "Set 1 :: Challenge 5 :: Implement repeating-key XOR
+
+  Encodes input string using the given key"
   [key str]
   (let [b1 (str-to-bytes str)
         b2 (flatten (repeat (map byte (char-array key))))
@@ -269,6 +275,7 @@
 
 (def input (slurp "data/s1c6.txt"))
 
+;; TODO: write your own Hamming weight fn (although hotspot calls a CPU instruction on Core processors :))
 (defn- edit-distance-bytes
   [b1 b2]
   (let [xored (map bit-xor b1 b2)
@@ -327,9 +334,33 @@
         xored (map bit-xor bs1 bs2)]
     (bytes-to-str xored)))
 
-(def decrypt-repeating-key-xor-base64 (comp decrypt-repeating-key-xor base64-to-bytes))
+(def decrypt-repeating-key-xor-base64
+  "Set 1 :: Challenge 6 :: Break repeating-key XOR"
+  (comp decrypt-repeating-key-xor base64-to-bytes))
 
 (def base64-to-str (comp bytes-to-str base64-to-bytes))
+
+
+;; ===============
+;;   CHALLENGE 7
+;; ===============
+;;
+;; Decrypt AES in ECB mode (given the key)
+;;
+(defn decrypt-aes-ecb
+  "Set 1 :: Challenge 7 :: AES in ECB mode"
+  [bytes key]
+  (let [cipher (Cipher/getInstance "AES/ECB/NoPadding")
+        initialized (.init cipher Cipher/DECRYPT_MODE key)
+        decrypted (.doFinal initialized bytes)]
+    decrypted))
+
+(defn  decrypt-aes-ecb-base64 [base64 key]
+  (decrypt-aes-ecb (base64-to-bytes base64) key))
+
+(def decrypt-aes-ecb-base64-to-str (comp bytes-to-str decrypt-aes-ecb-base64))
+
+
 
 ;; TODO:
 
@@ -338,3 +369,9 @@
 ;;   c. Swap 'unsafe' hex-to-bytes for a safer hex lookup (dict?)
 ;; 2. Roll your own bitCount function
 ;; 3. Make everything lazy
+;  4. Refactor with an eye for a) writing idiomatic clojure and b) using more language features (where necessary) e.g. perhaps multimethods for fns that can take either bytes or strings
+;; 5. Blog about your solutions, problems encountered, experiences. This is as important as the puzzles themselved.
+;; 6. Set up CI to run the tests
+;; 7. Roll your own AES implementation
+;; 8. Make 'implement repeating key XOR' a command line function.
+;;   i. Make it a binary using GraalVM.
