@@ -2,7 +2,8 @@
   (:require [clojure.set :refer [difference map-invert]]
             [clojure.string :as string]
             [clojure.math.numeric-tower :refer [expt]])
-  (:import [javax.crypto Cipher]))
+  (:import [javax.crypto Cipher]
+           [javax.crypto.spec SecretKeySpec]))
 
 ;; "RULE: Always operate on raw bytes, never on encoded strings. Only use hex and base64 for pretty-printing
 
@@ -16,6 +17,7 @@
               parse-chars (fn [[c1 c2]] (read-string (str "0x" c1 c2)))]
           (map parse-chars chars)))
 
+
 (defn print-bytes
   "[dev] Turn byte arrays into lists of ones-and-zeros"
   [byte & rest]
@@ -24,6 +26,7 @@
         zero-pad  (fn [string] (string/replace string " " "0"))]
     (map (comp zero-pad pad stringify) (conj rest byte))))
 
+;; TODO: rename base64-expand-bytes
 (defn three-bytes-to-four-bytes
   "Turn three bytes into four (padded with zeros). Used for base64 encoding"
   [bytes-in]
@@ -33,8 +36,7 @@
                    (bit-shift-right b2 4))
         c3 (bit-or (bit-shift-left (bit-and 2r1111 b2) 2) ; last 4 bits of b2 plus first 2 bits of b3
                    (bit-shift-right b3 6))
-        c4 (bit-and 2r111111 b3)                          ; last 6 bits of b3
-        ]
+        c4 (bit-and 2r111111 b3)]                          ; last 6 bits of b3
     [c1 c2 c3 c4]))
 
 ;; (defn take-bits [n b]
@@ -43,6 +45,7 @@
 ;; (defn last-n-bits [n b]
 ;;   (bit-and 2r11)
 
+;; TODO: rename base64-reduce-bytes
 (defn four-bytes-to-three-bytes
   "Turn a zero-padded seq of four bytes into the original three. Used for base64 decoding"
   [bytes-in]
@@ -68,7 +71,7 @@
 
 (def base64-chars (set (vals base64-map)))
 
-;; TODO: change tail call to `(apply str (comp encode flatten expand to-triples))`?
+;; TODO: separate main algo from hex-to-bytes, def this as a comp fn
 (defn hex-to-base64
   "Set 1 :: Challenge 1 :: Base64 encode a hex string"
   [hex]
@@ -78,15 +81,17 @@
         chars   (map base64-map (flatten quads))]
     (apply str chars)))
 
+;; TODO: make sanitized a sanitize closure, called in indices
+;; TODO: inline bytes in quads
 (defn base64-to-bytes
   "Decode base64 encoded data"
   [str]
-  (let [chars (map char str)
+  (let [chars     (map char str)
         sanitized (filter (partial contains? base64-chars) chars)
-        indices (map (map-invert base64-map) sanitized)
-        bytes (map byte indices)
-        quads (partition 4 bytes)
-        triples (map four-bytes-to-three-bytes quads)]
+        indices   (map (map-invert base64-map) sanitized)
+        bytes     (map byte indices)
+        quads     (partition 4 bytes)
+        triples   (map four-bytes-to-three-bytes quads)]
     (flatten triples)))
 
 ;; ===============
@@ -168,9 +173,7 @@
 (defn chi-square [expected actual]
   (/ (square (- actual expected)) expected))
 
-;; I think this is the wrong way around. What if instead of considering only the expected values, you also considered the actual values
-
-;; For each actual value, 
+;; TODO: document, talk about that 0.000001 value for missing observations (the presence of which invalidates chi-sq)
 (defn chi-square-distance
   "Reduces the difference between two sets of observations to a single number.
   Lower numbers indicate greater convergence."
@@ -179,15 +182,16 @@
     (reduce + distances)))
 
 
+;; TODO: extract a generic fn that measures the 'fit' of a string, taking the rel freq map as an argument
 (defn str-iciness
   "V3 -- Measures the likelyhood of a string being a Vanilla Ice lyric, using a
   chi-squared test against a relative character frequency map trained on
   lyrics."
   [str]
-  (let [chars (char-array (string/lower-case str))  ; [\h \e \l \l \o]
-        freqs (frequencies chars) ; {\l 2 \h 1 \e 1 \o 1}
-        expected-freqs (map-vals (partial * (count chars)) ice-char-rel-freq)]
-    (* -1 (chi-square-distance expected-freqs freqs))))
+  (let [chars   (char-array (string/lower-case str))
+        e-freqs (map-vals (partial * (count chars)) ice-char-rel-freq)
+        a-freqs (frequencies chars)]
+    (* -1 (chi-square-distance e-freqs a-freqs))))
 
 
 (defn single-char-xor
@@ -206,7 +210,7 @@
 
 
 (def printable-ascii-chars
-  "https://en.wikipedia.org/wiki/ASCII#Printable_characters"
+  "Source: https://en.wikipedia.org/wiki/ASCII#Printable_characters"
   (map char (range 32 127)))
 
 (defn decode-single-char-xor
@@ -219,8 +223,8 @@
 (defn decode-single-char-xor-encoded-hex-str
   "Set 1 :: Challenge 3 :: Single-byte XOR cipher"
   [str]
-  (let [bytes      (hex-to-bytes str)
-        winner     (decode-single-char-xor bytes)]
+  (let [bytes  (hex-to-bytes str)
+        winner (decode-single-char-xor bytes)]
     (-> winner
         (update :out bytes-to-str)
         (assoc :in str))))
@@ -259,10 +263,10 @@
 (defn repeating-key-xor
   "Set 1 :: Challenge 5 :: Implement repeating-key XOR
 
-  Encodes input string using the given key"
+  Encodes an input string using the given key"
   [key str]
-  (let [b1 (str-to-bytes str)
-        b2 (flatten (repeat (map byte (char-array key))))
+  (let [b1    (str-to-bytes str)
+        b2    (flatten (repeat (map byte (char-array key))))
         xored (map bit-xor b1 b2)]
     (bytes-to-hex xored)))
 
@@ -278,7 +282,7 @@
 ;; TODO: write your own Hamming weight fn (although hotspot calls a CPU instruction on Core processors :))
 (defn- edit-distance-bytes
   [b1 b2]
-  (let [xored (map bit-xor b1 b2)
+  (let [xored      (map bit-xor b1 b2)
         bit-counts (map #(Integer/bitCount %) xored)]
     (reduce + bit-counts)))
 
@@ -298,8 +302,8 @@
   "Score a given key based on the hamming-distance of its application against the bytestream"
   [bytes ks]
   (let [byte-pairs (partition 2 (partition ks bytes))
-        scores (flatten (map #(apply edit-distance-bytes %) byte-pairs))
-        avg-score (/ (apply + scores) (count scores))
+        scores     (flatten (map #(apply edit-distance-bytes %) byte-pairs))
+        avg-score  (/ (apply + scores) (count scores))
         normalized (/ avg-score ks)]
     {:score normalized :ks ks}))
 
@@ -343,24 +347,25 @@
 
 ;; ===============
 ;;   CHALLENGE 7
-;; ===============
+;; ==============
 ;;
 ;; Decrypt AES in ECB mode (given the key)
 ;;
+
 (defn decrypt-aes-ecb
   "Set 1 :: Challenge 7 :: AES in ECB mode"
-  [bytes key]
-  (let [cipher (Cipher/getInstance "AES/ECB/NoPadding")
-        initialized (.init cipher Cipher/DECRYPT_MODE key)
-        decrypted (.doFinal initialized bytes)]
+  [byte-stream key]
+  (let [key-spec  (SecretKeySpec. (.getBytes key) "AES")
+        cipher    (Cipher/getInstance "AES/ECB/PKCS5Padding")
+        _         (.init cipher (int Cipher/DECRYPT_MODE) key-spec)
+        decrypted (.doFinal cipher (byte-array byte-stream))]
     decrypted))
 
-(defn  decrypt-aes-ecb-base64 [base64 key]
+
+(defn decrypt-aes-ecb-base64 [base64 key]
   (decrypt-aes-ecb (base64-to-bytes base64) key))
 
 (def decrypt-aes-ecb-base64-to-str (comp bytes-to-str decrypt-aes-ecb-base64))
-
-
 
 ;; TODO:
 
@@ -375,3 +380,7 @@
 ;; 7. Roll your own AES implementation
 ;; 8. Make 'implement repeating key XOR' a command line function.
 ;;   i. Make it a binary using GraalVM.
+;; 9. Layer on clojure spec for the public fns.
+;; 10. Extract the utility fns to a separate namespace
+;; 11. experiment with generative testing based on specs
+;; 12. Nest everything under a hale namespace
