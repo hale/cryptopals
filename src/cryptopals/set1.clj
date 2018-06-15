@@ -177,9 +177,10 @@
 (defn chi-square-distance
   "Reduces the difference between two sets of observations to a single number.
   Lower numbers indicate greater convergence."
-  [expected-freqs actual-freqs]
-  (let [distances (map (fn [[a-key a-val]] (chi-square (get expected-freqs a-key 0.000001) a-val)) actual-freqs)]
-    (reduce + distances)))
+  ([e-freqs a-freqs] (chi-square-distance e-freqs a-freqs 0.000001))
+  ([e-freqs a-freqs missing]
+  (let [distances (map (fn [[a-key a-val]] (chi-square (get e-freqs a-key missing) a-val)) a-freqs)]
+    (reduce + distances))))
 
 
 ;; TODO: extract a generic fn that measures the 'fit' of a string, taking the rel freq map as an argument
@@ -299,7 +300,7 @@
 
 
 (defn evaluate-key-size
-  "Score a given key based on the hamming-distance of its application against the bytestream"
+  "Score a given keysize based on the hamming-distance of its application against the bytestream"
   [bytes ks]
   (let [byte-pairs (partition 2 (partition ks bytes))
         scores     (flatten (map #(apply edit-distance-bytes %) byte-pairs))
@@ -347,7 +348,7 @@
 
 ;; ===============
 ;;   CHALLENGE 7
-;; ==============
+;; ===============
 ;;
 ;; Decrypt AES in ECB mode (given the key)
 ;;
@@ -366,6 +367,55 @@
   (decrypt-aes-ecb (base64-to-bytes base64) key))
 
 (def decrypt-aes-ecb-base64-to-str (comp bytes-to-str decrypt-aes-ecb-base64))
+
+;; ===============
+;;   CHALLENGE 8
+;; ===============
+;;
+;; Detect AES in ECB mode.
+;;
+;; In this file are a bunch of hex-encoded ciphertexts. One of them has been
+;; encrypted with ECB. Detect it.
+;;
+;; Remember that the problem with ECB is that it is stateless and deterministic;
+;; the same 16 byte plaintext block will always produce the same 16 byte
+;; ciphertext.
+                                        ;
+
+;; Cyphertext known to be encoded with AES in ECB mode will exhibit repeating
+;; blocks of bytes (if the plaintext has any repetition). A good heuristic for
+;; AES in ECB mode would therefore be 'contains repetition'.
+;;
+;; Info about the source data:
+;;
+;; 1. 64 strings to test
+;; 2. Each string is 60 chars long (hex encoded, so that's 30 bytes)
+;;
+;; We already have that chi-squared function which can measure the deviation of
+;; observations from what is expected.
+;;
+;; The opposite of repetition is randomness. Randomness can be defined here as
+;; 'each byte is equaly likey to appear'. I.e. the bytes should be uniformally
+;; distributed. The least-random ciphertext will therefore be the set of bytes
+;; that is most deviant from the uniform distribution (where every outcome is
+;; equally likely)
+
+(def uniform-bytes-rel-freq-map
+  "Standard uniform distribution for a set of bytes"
+  (zipmap (map byte (range 0 128))
+          (repeat 128 (/ 1 128))))
+
+(defn detect-aes-in-ecb-mode
+  "Set 1 :: Challenge 8 :: Detect AES in ECB mode"
+  [strs]
+  (let [streams (map hex-to-bytes strs)
+        e-freqs (map-vals (partial * 60) uniform-bytes-rel-freq-map)
+        score   (fn [bs] (chi-square-distance e-freqs (frequencies bs) (/ 1 256)))
+        scores  (map #(hash-map :in % :score (score %)) streams)
+        winner  (apply max-key :score scores)]
+    (bytes-to-hex (:in winner))))
+
+
 
 ;; TODO:
 
