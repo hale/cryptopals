@@ -1,6 +1,6 @@
-# cryptopals
+# hale.cryptopals [![CircleCI](https://circleci.com/gh/hale/cryptopals.svg?style=svg)](https://circleci.com/gh/hale/cryptopals)
 
-Clojure implementation of the Cryptopals challenges
+Clojure implementation of the Cryptopals challenges. This is a work in progress.
 
 ## License
 

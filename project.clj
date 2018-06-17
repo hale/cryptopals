@@ -1,18 +1,22 @@
 (defproject hale.cryptopals "0.1.0-SNAPSHOT"
   :description "
+Cryptopals challenges in Clojure.
 
-**Cryptopals challenges in Clojure.**
-
-[A collection of 48 exercises that demonstrate attacks on real-world
-crypto.](https://cryptopals.com/)
+[A collection of 48 exercises that demonstrate attacks on real-world crypto.](https://cryptopals.com/)
 
 This is a different way to learn about crypto than taking a class or reading a
 book. We give you problems to solve. They're derived from weaknesses in
 real-world systems and modern cryptographic constructions. We give you enough
 info to learn about the underlying crypto concepts yourself. When you're
 finished, you'll not only have learned a good deal about how cryptosystems are
-built, but you'll also understand how they're attacked."
-  :url "https://pghale.com/cryptopals"
+built, but you'll also understand how they're attacked.
+
+<br />
+<h2><strong>WORK IN PROGRESS</strong>!<small>  This notice will remain in place
+until I have completed the challenges and tidied up the documentation.</small></h2>
+<br /> <br /> <br />
+"
+  :url "https://github.com/hale/cryptopals"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]]
