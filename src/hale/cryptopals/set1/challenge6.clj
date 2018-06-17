@@ -47,7 +47,6 @@
             [hale.cryptopals.set1.challenge1 :as base64]
             [hale.cryptopals.set1.challenge3 :as challenge3]))
 
-;; TODO: write your own Hamming weight fn (although hotspot calls a CPU instruction on Core processors :))
 (defn- edit-distance-bytes
   [b1 b2]
   (let [xored      (map bit-xor b1 b2)

@@ -52,4 +52,3 @@
         expected (nth strs 132)
         actual (detect-aes-in-ecb-mode strs)]
     (t/is (= expected actual))))
-

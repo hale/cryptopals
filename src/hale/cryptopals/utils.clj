@@ -3,7 +3,7 @@
             [clojure.string :as str]))
 
 (defn hex-to-bytes
-  "TODO: UNSAFE -- interprets string as hex using read-string"
+  "FIXME: UNSAFE -- interprets string as hex using read-string"
   [hex] (let [chars (partition 2 hex)
               parse-chars (fn [[c1 c2]] (read-string (str "0x" c1 c2)))]
           (map parse-chars chars)))

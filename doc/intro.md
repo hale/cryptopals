@@ -1,3 +1,3 @@
-# Introduction to cryptopals
+# hale.cryptopals
 
-TODO: write [great documentation](http://jacobian.org/writing/what-to-write/)
+[https://www.pghale.com/cryptopals.html](https://www.pghale.com/cryptopals.html)

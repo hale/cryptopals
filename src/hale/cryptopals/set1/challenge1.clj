@@ -12,7 +12,7 @@
 ;; So go ahead and make that happen. You'll need to use this code for the rest
 ;; of the exercises.
 ;;
-;; **Cryptopals Rule: Always operate on raw bytes, never on encoded strings. Only use hex and base64 for pretty-printing**
+;; Cryptopals Rule: Always operate on raw bytes, never on encoded strings. Only use hex and base64 for pretty-printing.
 ;;
 ;; <hr />
 (ns hale.cryptopals.set1.challenge1
@@ -92,8 +92,10 @@
   (comp base64-encode utils/hex-to-bytes))
 
 (t/deftest test-hex-to-base64
-  (t/is (= (hex-to-base64 "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")
-         "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")))
+  (t/is (= (hex-to-base64
+            (str "49276d206b696c6c696e6720796f757220627261696e206c"
+                 "696b65206120706f69736f6e6f7573206d757368726f6f6d"))
+            "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")))
 
 
 ;; ## Decode
@@ -134,14 +136,10 @@
     (flatten triples)))
 
 (t/deftest test-base64-decode
-  (t/is (= "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
-           (utils/bytes-to-hex (base64-decode "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"))))
+  (t/is (= (str "49276d206b696c6c696e6720796f757220627261696e206c"
+                "696b65206120706f69736f6e6f7573206d757368726f6f6d")
+           (utils/bytes-to-hex
+            (base64-decode
+             "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")))))
 
-  (def base64-to-str (comp utils/bytes-to-str base64-decode)))
-
-
-;; TODO: make base64-to-str output padding '===' chars
-;; (t/deftest test-base64-to-str
-;;   (let [decoded "Man is distinguished, not only by his reason, but by"
-;;         encoded (.encode (Base64/getEncoder) (.getBytes decoded))]
-;;     (t/is (= decoded (s/base64-to-str encoded) ))))
+(def base64-to-str (comp utils/bytes-to-str base64-decode))

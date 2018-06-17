@@ -1,6 +1,7 @@
 (defproject hale.cryptopals "0.1.0-SNAPSHOT"
   :description "
-Cryptopals challenges in Clojure.
+
+Cryptopals challenges in Clojure. ![CircleCI](https://circleci.com/gh/hale/cryptopals.svg?style=svg)
 
 [A collection of 48 exercises that demonstrate attacks on real-world crypto.](https://cryptopals.com/)
 
@@ -11,10 +12,19 @@ info to learn about the underlying crypto concepts yourself. When you're
 finished, you'll not only have learned a good deal about how cryptosystems are
 built, but you'll also understand how they're attacked.
 
-<br />
-<h2><strong>WORK IN PROGRESS</strong>!<small>  This notice will remain in place
-until I have completed the challenges and tidied up the documentation.</small></h2>
-<br /> <br /> <br />
+**Work in progress:**
+
+* <s>Start</s> 24th May 2018
+* <s>Set 1</s> 17th June 2018
+* Set 2
+* Set 3
+* Set 4
+* Set 5
+* Set 6
+* Set 7
+* Set 8
+
+
 "
   :url "https://github.com/hale/cryptopals"
   :license {:name "Eclipse Public License"

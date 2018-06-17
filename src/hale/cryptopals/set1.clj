@@ -13,22 +13,3 @@
 ;; say which) are important stepping stones to later attacks.
 ;;
 (ns hale.cryptopals.set1)
-
-
-;; TODO:
-
-;; 1. Base64 algorithm:
-;;   a. Handle input that isn't a multiple of three (padding)
-;;   c. Swap 'unsafe' hex-to-bytes for a safer hex lookup (dict?)
-;; 2. Roll your own bitCount function
-;; 3. Make everything lazy?
-;; 7. Roll your own AES implementation
-;; 8. Make 'implement repeating key XOR' a command line function.
-;;   1. Make it a binary using GraalVM.
-;; 9. Layer on clojure spec for the public fns.
-;; 10. experiment with generative testing based on specs
-;; 11. Profile with YourKit / VisualVM.
-;;   1. This revealed that chi-square is a hotspot, as well as the basic
-;;      division and multiplication fns. I think this is because many of the
-;;      numbers get really large with that default value of 0.00001 for missing
-;;      observations. Look into making that value smaller.
