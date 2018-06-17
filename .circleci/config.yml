@@ -16,7 +16,8 @@ jobs:
           paths:
             - ~/.m2
           key: cci-hale-cryptopals-{{ checksum "project.clj" }}
-      - run: lein do clean, test src/hale/cryptopals/**/*.clj, uberjar
+      - run: lein test src/hale/cryptopals/**/*.clj
+      - run: lein uberjar
       - store_artifacts:
           path: target/uberjar/cci-hale-cryptopals.jar
           destination: uberjar
