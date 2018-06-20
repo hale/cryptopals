@@ -47,6 +47,8 @@
             [hale.cryptopals.set1.challenge1 :as base64]
             [hale.cryptopals.set1.challenge3 :as challenge3]))
 
+;; **1. 2. 3. 4. Find the key size**
+
 (defn- edit-distance-bytes
   [b1 b2]
   (let [xored      (map bit-xor b1 b2)
@@ -63,10 +65,6 @@
 (t/deftest test-edit-distance
   (t/is (= (edit-distance "this is a test" "wokka wokka!!!") 37)))
 
-
-;; STEP 1 -- Find the key size
-
-
 (defn evaluate-key-size
   "Score a given keysize based on the hamming-distance of its application against the bytestream"
   [bytes ks]
@@ -82,12 +80,12 @@
         scores (map #(evaluate-key-size bytes %) candidates)]
     (apply min-key :score scores)))
 
+(t/deftest test-determine-key-size
+  (t/is (= 29 (:ks (determine-key-size (base64/base64-decode (slurp "data/s1c6.txt")) 50)))))
 
-;; STEP 2 -- transpose input using the discovered key size
+;; **5. 6. 7. 8. Find the key**
 
 (defn transpose [m] (apply mapv vector m))
-
-;; STEP 3 -- solve each block as if it was single-char XOR
 
 (defn find-repeating-xor-key
   "Given bytes encrypted with repeating-key XOR, find the key"
@@ -105,13 +103,13 @@
 (defn decrypt-repeating-key-xor
   "Decodes input bytestream by guessing the key."
   [bs1]
-  (let [key (find-repeating-xor-key bs1)
+  (let [key   (find-repeating-xor-key bs1)
         bs2   (flatten (repeat (map byte (char-array key))))
         xored (map bit-xor bs1 bs2)]
     (utils/bytes-to-str xored)))
 
 (def decrypt-repeating-key-xor-base64
-  "Set 1 :: Challenge 6 :: Break repeating-key XOR"
+  "Break repeating-key XOR"
   (comp decrypt-repeating-key-xor base64/base64-decode))
 
 (t/deftest test-decrypt-repeating-key-xor

@@ -1,6 +1,6 @@
 ;; # Base64 encode a hex string
 ;;
-
+;;
 ;; The string:
 ;;
 ;;     49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d
@@ -14,7 +14,6 @@
 ;;
 ;; Cryptopals Rule: Always operate on raw bytes, never on encoded strings. Only use hex and base64 for pretty-printing.
 ;;
-;; <hr />
 (ns hale.cryptopals.set1.challenge1
   (:require [clojure.set :refer [map-invert]]
             [clojure.string :as str]
@@ -46,7 +45,8 @@
 ;;
 ;; The initial step of parsing hexidecimal strings as bytes is in the utils
 ;; namespace, as it's something we'll be using a lot in these exercises.
-
+;;
+;; <hr />
 (def base64-map
   "Axiomatic Base64 map of six-bit bytes (indices) to ASCII characters"
   { 0 \A  1 \B  2 \C  3 \D  4 \E  5 \F  6 \G  7 \H
@@ -88,7 +88,7 @@
     (apply str chars)))
 
 (def hex-to-base64
-  "**Set 1 :: Challenge 1 :: Base64 encode a hex string**"
+  "Set 1 :: Challenge 1 :: Base64 encode a hex string"
   (comp base64-encode utils/hex-to-bytes))
 
 (t/deftest test-hex-to-base64

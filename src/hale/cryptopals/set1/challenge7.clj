@@ -12,7 +12,7 @@
 ;;
 ;; Easiest way: use OpenSSL::Cipher and give it AES-128-ECB as the cipher.
 ;;
-;;**Do this with code.** You can obviously decrypt this using the OpenSSL
+;;_Do this with code._ You can obviously decrypt this using the OpenSSL
 ;; command-line tool, but we're having you get ECB working in code for a reason.
 ;; You'll need it a lot later on, and not just for attacking ECB.
 ;;
@@ -39,7 +39,7 @@
   (decrypt-aes-ecb (base64/base64-decode b64) key))
 
 (def decrypt-aes-ecb-base64-to-str
-  "Set 1 :: Challenge 7 :: AES in ECB mode"
+  "Decrypt AES in ECB mode"
   (comp utils/bytes-to-str decrypt-aes-ecb-base64))
 
 (t/deftest decrypt-aes-in-ecb-mode

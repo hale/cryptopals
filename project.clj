@@ -41,4 +41,6 @@ built, but you'll also understand how they're attacked.
                     "src/hale/cryptopals/set1/challenge6.clj"
                     "src/hale/cryptopals/set1/challenge7.clj"
                     "src/hale/cryptopals/set1/challenge8.clj"
+                    "src/hale/cryptopals/set2.clj"
+                    "src/hale/cryptopals/set2/challenge9.clj"
                     "src/hale/cryptopals/utils.clj"]})

@@ -186,7 +186,7 @@
     winner))
 
 (defn decode-single-char-xor-encoded-hex-str
-  "Set 1 :: Challenge 3 :: Single-byte XOR cipher"
+  "Single-byte XOR cipher"
   [str]
   (let [bytes  (utils/hex-to-bytes str)
         winner (decode-single-char-xor bytes)]

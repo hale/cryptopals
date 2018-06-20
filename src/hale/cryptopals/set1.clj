@@ -1,4 +1,4 @@
-;; ## Crypto Challenge Set 1
+;; # Crypto Challenge Set 1
 ;;
 ;; This is the **qualifying set**. We picked the exercises in it to ramp
 ;; developers up gradually into coding cryptography, but also to verify that we
