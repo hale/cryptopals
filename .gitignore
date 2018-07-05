@@ -12,3 +12,6 @@ pom.xml.asc
 
 data/training-text
 docs
+
+test-results
+build.xml
