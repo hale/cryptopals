@@ -25,25 +25,29 @@
            [javax.crypto.spec SecretKeySpec]))
 
 
-
 (defn decrypt-aes-ecb
-  [byte-stream key]
+  [key byte-stream]
   (let [key-spec  (SecretKeySpec. (.getBytes key) "AES")
-        cipher    (Cipher/getInstance "AES/ECB/PKCS5Padding")
+        cipher    (Cipher/getInstance "AES/ECB/NoPadding")
         _         (.init cipher (int Cipher/DECRYPT_MODE) key-spec)
+        _ (println (count byte-stream))
         decrypted (.doFinal cipher (byte-array byte-stream))]
     decrypted))
 
 
-(defn decrypt-aes-ecb-base64 [b64 key]
-  (decrypt-aes-ecb (base64/base64-decode b64) key))
+(defn decrypt-aes-ecb-base64 [key b64]
+  (decrypt-aes-ecb key (base64/base64-decode b64)))
 
 (def decrypt-aes-ecb-base64-to-str
   "Decrypt AES in ECB mode"
   (comp utils/bytes-to-str decrypt-aes-ecb-base64))
 
-(t/deftest decrypt-aes-in-ecb-mode
+;; TODO: why does this return ^D^D^D^D at the end? the same is NOT returned by openssl:
+;;
+;; openssl enc -d -a -aes-128-ecb -in 7.txt -v -K $(echo -n "YELLOW SUBMARINE" | hexdump -v -e '/1 "%02X"') -out 7.solution.txt
+;;
+(t/deftest test-decrypt-aes-ecb
   (let [key "YELLOW SUBMARINE"
         ciphertext (slurp "data/s1c7.txt")
         plaintext (slurp "data/s1c7.solution.txt")]
-    (t/is (= (decrypt-aes-ecb-base64-to-str ciphertext key) plaintext))))
+    (t/is (= plaintext (decrypt-aes-ecb-base64-to-str key ciphertext)))))
