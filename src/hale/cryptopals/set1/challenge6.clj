@@ -113,8 +113,6 @@
   (comp decrypt-repeating-key-xor base64/base64-decode))
 
 (t/deftest test-decrypt-repeating-key-xor
-  (let [ciphertext (slurp "data/s1c6.txt")
-        e-lines (str/split (slurp "data/s1c6.solution.txt") #"\n")
-        a-lines (str/split (decrypt-repeating-key-xor-base64 ciphertext) #"\n")]
-    (t/is (every? (fn [[expected actual]] (= expected actual)) (zipmap e-lines a-lines)))))
+  (t/is (= (decrypt-repeating-key-xor-base64 (slurp "data/s1c6.txt"))
+           (slurp "data/s1c6.solution.txt"))))
 
