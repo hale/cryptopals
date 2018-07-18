@@ -1,8 +1,9 @@
 TODO:
 
 1. Fix unsafe hex-to-bytes function
+1. Add Circle CI step for marginalia and deploy to pghale.com/cryptopals.html
+2. Redirect /cryptopals to /cryptopals.html
 1. Base64 algorithm:
-  a. Handle input that isn't a multiple of three (padding)
   c. Swap 'unsafe' hex-to-bytes for a safer hex lookup (dict?)
 2. Roll your own bitCount function / Hamming weight fn (although hotspot calls a CPU instruction on Core processors :))
 3. Make everything lazy?
@@ -16,7 +17,6 @@ TODO:
      division and multiplication fns. I think this is because many of the
      numbers get really large with that default value of 0.00001 for missing
      observations. Look into making that value smaller.
-12. make base64-to-str output padding '===' chars
 
 ;; (t/deftest test-base64-to-str
 ;;   (let [decoded "Man is distinguished, not only by his reason, but by"
