@@ -53,3 +53,12 @@
 (defn bytes-to-hex
   [bytes]
   (apply str (map (partial format "%02x") bytes)))
+
+(defn bytes-to-chars
+  "Convert a signed byte (-128 to 127) to an unsigned primitive char."
+  [bytes]
+  (map (fn [b] (bit-and (byte b) 0xFF)) bytes))
+
+(def squish (comp clojure.string/join clojure.string/split-lines))
+
+(def slurp-squish (comp squish slurp))

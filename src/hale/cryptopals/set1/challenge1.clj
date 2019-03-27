@@ -95,10 +95,11 @@
 (defn base64-encode
   "Base64 encode a stream of bytes"
   [bytes]
-  (let [triples (partition 3 3 [] bytes)
-        quads   (map (partial apply base64-expand-bytes) triples)
-        chars   (map (fn [k] (get base64-map k \=)) (flatten quads))]
-    (apply str chars)))
+  (let [chars     (utils/bytes-to-chars bytes)
+        triples   (partition 3 3 [] chars)
+        quads     (map (partial apply base64-expand-bytes) triples)
+        encoded   (map (fn [k] (get base64-map k \=)) (flatten quads))]
+    (apply str encoded)))
 
 (def base64-encode-str (comp base64-encode utils/str-to-bytes))
 
