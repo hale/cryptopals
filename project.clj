@@ -29,7 +29,7 @@ built, but you'll also understand how they're attacked.
   :url "https://github.com/hale/cryptopals"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.9.0"]]
+  :dependencies [[org.clojure/clojure "1.10.0"]]
   :plugins [[lein-marginalia "0.9.1"]
             [test2junit "1.4.2"]]
   :test2junit-output-dir "test-results/clojure.test"
